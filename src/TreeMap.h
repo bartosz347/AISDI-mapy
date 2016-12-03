@@ -5,6 +5,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
+#include <iostream> // TODO REMOVE
 
 namespace aisdi
 {
@@ -15,7 +16,7 @@ class TreeMap
 public:
   using key_type = KeyType;
   using mapped_type = ValueType;
-  using value_type = std::pair<const key_type, mapped_type>;
+  using value_type = std::pair<key_type, mapped_type>; // TODO removed const from key_type
   using size_type = std::size_t;
   using reference = value_type&;
   using const_reference = const value_type&;
@@ -31,8 +32,10 @@ private: // TODO move to lower private section
     BinaryNode *left;
     BinaryNode *right;
     BinaryNode *parent;
-    key_type key;
-    mapped_type value;
+    //key_type key;
+    //mapped_type value;
+    //value_type data; TODO how to use const key_type?
+    std::pair<key_type, mapped_type> data;
     //BinaryNode(BinaryNode *left, BinaryNode *right, BinaryNode *parent) : left(left), right(right), parent(parent) {} // todo is used?
     BinaryNode() {}
   };
@@ -91,12 +94,14 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
+    (void)key;
     if(size == 0) {
-      head->key = key;
-      head->left = nullptr;
-      head->right = nullptr;
-      size++;
-      return head->value;
+        head->left = new BinaryNode;
+        head->left->parent = head;
+        head->data = std::make_pair(key, mapped_type{});
+        head->right = nullptr;
+        size++;
+        return head->data.second;
     }
     // TODO implement inserting on ther pos than head
     //BinaryNode *newNode = new BinaryNode(nullptr,nullptr);
@@ -148,7 +153,6 @@ public:
   {
     (void)other;
     throw std::runtime_error("TODO");
-
   }
 
   bool operator!=(const TreeMap& other) const
@@ -230,8 +234,7 @@ public:
 
   reference operator*() const
   {
-    throw std::runtime_error("TODO");
-    //return std::pair<key_type, mapped_type>(currentNode->key, currentNode->value);
+    return currentNode->parent->data;
   }
 
   pointer operator->() const
