@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenMapWithOnePair_WhenIterating_ThenPairIsReturn
   BOOST_CHECK_EQUAL(it->second, "Rome");
   BOOST_CHECK(++it == map.end());
 }
-/*
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenIterator_WhenPostIncrementing_ThenPreviousPositionIsReturned,
                               K,
                               TestedKeyTypes)
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenChangingItem_ThenNewValueIsIn
 
   thenMapContainsItems(map, { { 42, "Alice" }, { 27, "Bob" } });
 }
-
+/*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenCreatingCopy_ThenBothMapsAreEmpty,
                               K,
                               TestedKeyTypes)
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenMoveAssigning_ThenAllElements
   thenMapContainsItems(other, { { 753, "Rome" }, { 1789, "Paris" } });
   BOOST_CHECK(map.isEmpty());
 }
-
+*/
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenReadingValueOfAnyKey_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenChangingValueOfAKey_ThenValue
 
   thenMapContainsItems(map, { { 42, "Chuck" }, { 27, "Bob" } });
 }
-
+/*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenRemovingValueByKey_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingItemByIterator_Then
 
   BOOST_CHECK(map.isEmpty());
 }
-
+*/
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoEmptyMaps_WhenComparingThem_ThenTheyAreReportedAsEqual,
                               K,
                               TestedKeyTypes)
@@ -593,5 +593,5 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
 
 // ConstIterator is tested via Iterator methods.
 // If Iterator methods are to be changed, then new ConstIterator tests are required.
-*/
+
 BOOST_AUTO_TEST_SUITE_END()
