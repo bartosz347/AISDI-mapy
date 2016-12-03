@@ -44,7 +44,7 @@ private: // TODO move to lower private section
   void setup()
   {
     head = new BinaryNode();
-    head->left = head; //todo
+    head->left = head; // todo required to detect empty list
     head->right = head; // used for detecting illegal --begin() with empty collection
     head->parent = nullptr;
     size = 0;
@@ -187,8 +187,46 @@ public:
 
   void remove(const key_type& key)
   {
-    (void)key;
-    throw std::runtime_error("TODOa3");
+    // TODO REWRITE
+
+    if(isEmpty())
+      throw std::out_of_range("cannot remove, empty list");
+    auto nodeBeingRemoved = find(key).currentNode;
+    if(nodeBeingRemoved == head)
+      throw std::out_of_range("cannot remove, element does not exist");
+
+
+    // No children
+    if(nodeBeingRemoved->left == nullptr && nodeBeingRemoved->right == nullptr)
+    {
+      if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
+        nodeBeingRemoved->parent->left = nullptr;
+      else
+        nodeBeingRemoved->parent->right = nullptr;
+      if(nodeBeingRemoved->parent == head) head->left = head; // todo required to detect empty list...
+    }
+
+    // 1 child
+    if(nodeBeingRemoved->left == nullptr ) {
+       if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
+        nodeBeingRemoved->parent->left = nodeBeingRemoved->right;
+        else
+        nodeBeingRemoved->parent->right = nodeBeingRemoved->right;
+
+    } else if(nodeBeingRemoved->right == nullptr) {
+     if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
+        nodeBeingRemoved->parent->left = nodeBeingRemoved->left;
+    else
+        nodeBeingRemoved->parent->right = nodeBeingRemoved->left;
+
+    }
+
+
+
+
+
+    delete nodeBeingRemoved;
+    size--;
   }
 
   void remove(const const_iterator& it)
