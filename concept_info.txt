@@ -1,2 +1,8 @@
 Puste BST -> left i right head wskazują na head
-BST z jednym elementem -> left i right heada wskazują na nullptr
+BST z jednym elementem -> left wskazuje na head, right na nullptr
+
+
+begin() zwraca wskazanie na head->left
+end() zwraca wskazanie na head
+
+stąd head->left przy niepustym drzewie musi istnieć osobno od head

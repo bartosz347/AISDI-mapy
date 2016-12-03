@@ -98,6 +98,8 @@ public:
     if(size == 0) {
         head->left = new BinaryNode;
         head->left->parent = head;
+        head->left->left = nullptr;
+        head->left->right = nullptr;
         head->data = std::make_pair(key, mapped_type{});
         head->right = nullptr;
         size++;
@@ -214,7 +216,21 @@ public:
 
   ConstIterator& operator++()
   {
-    throw std::runtime_error("TODO");
+    BinaryNode *realCurrentNode = currentNode->parent;
+    if(realCurrentNode->right != nullptr) {
+      realCurrentNode = realCurrentNode->right;
+      while(realCurrentNode->left != nullptr)
+        realCurrentNode = realCurrentNode->left;
+      currentNode = realCurrentNode->left;
+      return *this;
+    }
+    BinaryNode *tmp = realCurrentNode->parent;
+    while(tmp != nullptr && realCurrentNode == tmp->right) {
+      realCurrentNode = tmp;
+      tmp = tmp->parent;
+    }
+    currentNode = realCurrentNode->left;
+    return *this;
   }
 
   ConstIterator operator++(int)
