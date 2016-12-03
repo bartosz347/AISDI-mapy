@@ -469,7 +469,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenChangingValueOfAKey_ThenValue
 
   thenMapContainsItems(map, { { 42, "Chuck" }, { 27, "Bob" } });
 }
-/*
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenRemovingValueByKey_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
@@ -499,6 +499,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByKey_ThenItemIs
   thenMapContainsItems(map, { { 42, "Alice" } });
 }
 
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueThatHasChildByKey_ThenItemIsRemoved,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 42, "Alice" }, { 27, "Bob" } };
+
+  map.remove(42);
+
+  thenMapContainsItems(map, { { 27, "Bob" } });
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapBecomesEmpty,
                               K,
                               TestedKeyTypes)
@@ -509,7 +521,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapB
 
   BOOST_CHECK(map.isEmpty());
 }
-
+/*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenErasingEnd_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
