@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenMapWithOnePair_WhenIterating_ThenPairIsReturn
 
   BOOST_CHECK_EQUAL(it->first, 753);
   BOOST_CHECK_EQUAL(it->second, "Rome");
-  //BOOST_CHECK(++it == map.end());
+  BOOST_CHECK(++it == map.end());
 }
 /*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenIterator_WhenPostIncrementing_ThenPreviousPositionIsReturned,
