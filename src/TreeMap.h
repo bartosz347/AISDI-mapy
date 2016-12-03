@@ -25,8 +25,34 @@ public:
   using iterator = Iterator;
   using const_iterator = ConstIterator;
 
+private: // TODO move to lower private section
+  class BinaryNode {
+  public:
+    BinaryNode *left;
+    BinaryNode *right;
+    BinaryNode *parent;
+    key_type key;
+    mapped_type value;
+    //BinaryNode(BinaryNode *left, BinaryNode *right, BinaryNode *parent) : left(left), right(right), parent(parent) {} // todo is used?
+    BinaryNode() {}
+  };
+  BinaryNode *head;
+  size_type size;
+
+  void setup()
+  {
+    head = new BinaryNode();
+    head->left = head;
+    head->right = head;
+    size = 0;
+  }
+
+
+public:
   TreeMap()
-  {}
+  {
+    setup();
+  }
 
   TreeMap(std::initializer_list<value_type> list)
   {
@@ -60,12 +86,20 @@ public:
 
   bool isEmpty() const
   {
-    throw std::runtime_error("TODO");
+    return size == 0;
   }
 
   mapped_type& operator[](const key_type& key)
   {
-    (void)key;
+    if(size == 0) {
+      head->key = key;
+      head->left = nullptr;
+      head->right = nullptr;
+      size++;
+      return head->value;
+    }
+    // TODO implement inserting on ther pos than head
+    //BinaryNode *newNode = new BinaryNode(nullptr,nullptr);
     throw std::runtime_error("TODO");
   }
 
@@ -114,31 +148,33 @@ public:
   {
     (void)other;
     throw std::runtime_error("TODO");
+
   }
 
   bool operator!=(const TreeMap& other) const
   {
-    return !(*this == other);
+    (void)other;
+    throw std::runtime_error("TODO");
   }
 
   iterator begin()
   {
-    throw std::runtime_error("TODO");
+    return ConstIterator(head->left);
   }
 
   iterator end()
   {
-    throw std::runtime_error("TODO");
+    return ConstIterator(head);
   }
 
   const_iterator cbegin() const
   {
-    throw std::runtime_error("TODO");
+    return ConstIterator(head->left);
   }
 
   const_iterator cend() const
   {
-    throw std::runtime_error("TODO");
+    return ConstIterator(head);
   }
 
   const_iterator begin() const
@@ -161,14 +197,16 @@ public:
   using value_type = typename TreeMap::value_type;
   using pointer = const typename TreeMap::value_type*;
 
+  BinaryNode *currentNode;
+
   explicit ConstIterator()
   {}
 
-  ConstIterator(const ConstIterator& other)
-  {
-    (void)other;
-    throw std::runtime_error("TODO");
-  }
+  explicit ConstIterator(BinaryNode *startNode) : currentNode(startNode)
+  {}
+
+  ConstIterator(const ConstIterator& other) : currentNode(other.currentNode)
+  {}
 
   ConstIterator& operator++()
   {
@@ -193,6 +231,7 @@ public:
   reference operator*() const
   {
     throw std::runtime_error("TODO");
+    //return std::pair<key_type, mapped_type>(currentNode->key, currentNode->value);
   }
 
   pointer operator->() const
@@ -202,8 +241,7 @@ public:
 
   bool operator==(const ConstIterator& other) const
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+    return this->currentNode == other.currentNode;
   }
 
   bool operator!=(const ConstIterator& other) const
