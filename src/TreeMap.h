@@ -5,7 +5,6 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <utility>
-#include <iostream> // TODO REMOVE
 
 namespace aisdi
 {
@@ -16,7 +15,7 @@ class TreeMap
 public:
   using key_type = KeyType;
   using mapped_type = ValueType;
-  using value_type = std::pair<key_type, mapped_type>; // TODO removed const from key_type
+  using value_type = std::pair<const key_type, mapped_type>;
   using size_type = std::size_t;
   using reference = value_type&;
   using const_reference = const value_type&;
@@ -32,10 +31,10 @@ private: // TODO move to lower private section
     BinaryNode *left;
     BinaryNode *right;
     BinaryNode *parent;
-
-    //value_type data; TODO how to use const key_type?
-    std::pair<key_type, mapped_type> data;
+    value_type data;
     BinaryNode() {}
+    BinaryNode(const key_type& key) : left(nullptr), right(nullptr), data(std::make_pair(key, mapped_type{})) {}
+
   };
   BinaryNode *head; // super head
   size_type size;
@@ -68,6 +67,22 @@ private: // TODO move to lower private section
       node2->parent = node1->parent;
   }
 
+  void postOrderTraversalFreeingMemory(BinaryNode *node)
+  {
+    if(node->left != nullptr)
+      postOrderTraversalFreeingMemory(node->left);
+    if(node->right != nullptr)
+      postOrderTraversalFreeingMemory(node->right);
+    delete (node);
+  }
+
+  void swap(TreeMap& first, TreeMap& second)
+  {
+    using std::swap;
+    swap(first.head, second.head);
+    swap(first.size, second.size);
+  }
+
 
 public:
   TreeMap()
@@ -91,27 +106,30 @@ public:
     }
   }
 
-  TreeMap(TreeMap&& other)
+  TreeMap(TreeMap&& other) : TreeMap()
   {
-    (void)other;
-    throw std::runtime_error("TODOi");
+    swap(*this, other);
   }
 
+  TreeMap& operator=(TreeMap other) // previous: TreeMap& operator=(const TreeMap& other)
+  {
+    if(&other == this)
+      return *this;
+    swap(*this, other);
+    return *this;
+  }
+/*
+  TreeMap& operator=(TreeMap&& other) // not necessary -> copy swap idiom TODO
+  {
+    (void)other;
+    throw std::runtime_error("TODO");
+  }
+*/
   ~TreeMap()
   {
-
-  }
-
-  TreeMap& operator=(const TreeMap& other)
-  {
-    (void)other;
-    throw std::runtime_error("TODOzz");
-  }
-
-  TreeMap& operator=(TreeMap&& other)
-  {
-    (void)other;
-    throw std::runtime_error("TODOzzz");
+    if(!isEmpty())
+      postOrderTraversalFreeingMemory(head->left);
+    delete head;
   }
 
   bool isEmpty() const
@@ -121,15 +139,10 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
-    BinaryNode *newNode = new BinaryNode();
-    newNode->right = nullptr;
-    newNode->left = nullptr;
-    newNode->data = std::make_pair(key, mapped_type{});
+    BinaryNode *newNode = new BinaryNode(key);
     if(isEmpty()) {
         newNode->parent = head;
-
         head->left = newNode; // list no longer empty
-
         head->right = nullptr; // important for check against decrementing begin() in empty map
         size++;
         return newNode->data.second;
@@ -178,10 +191,10 @@ public:
 
   const_iterator find(const key_type& key) const
   {
-    if(head == head->left || size == 0)
+    if(size == 0)
       return cend();
-    BinaryNode *current = head->left;
 
+    BinaryNode *current = head->left;
     while(current != nullptr) {
         if(key == current->data.first)
             return const_iterator(current);
@@ -195,10 +208,10 @@ public:
 
   iterator find(const key_type& key) // todo combine with const_iterator find
   {
-   if(head == head->left || size == 0)
+    if(size == 0)
       return end();
-    BinaryNode *current = head->left;
 
+    BinaryNode *current = head->left;
     while(current != nullptr) {
         if(key == current->data.first)
             return const_iterator(current);
@@ -276,18 +289,14 @@ public:
     return !operator==(other);
   }
 
-  iterator begin() // TODO combine with cbegin() ?
+  iterator begin()
   {
-    BinaryNode *leftMostNode = head;
-    if(head == head->left) return ConstIterator(head); // empty map
-    while(leftMostNode->left != nullptr)
-        leftMostNode = leftMostNode->left;
-    return ConstIterator(leftMostNode);
+    return cbegin();
   }
 
   iterator end()
   {
-    return ConstIterator(head);
+    return cend();
   }
 
   const_iterator cbegin() const

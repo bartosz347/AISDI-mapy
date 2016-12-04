@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenCreatingCopy_ThenAllItemsAreC
   thenMapContainsItems(map, { { 1410, "Grunwald" }, { 753, "Rome" }, { 1789, "Paris" } });
   thenMapContainsItems(other, { { 753, "Rome" }, { 1789, "Paris" } });
 }
-/*
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenMovingToOther_ThenBothMapsAreEmpty,
                               K,
                               TestedKeyTypes)
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenMoveAssigning_ThenAllElements
   thenMapContainsItems(other, { { 753, "Rome" }, { 1789, "Paris" } });
   BOOST_CHECK(map.isEmpty());
 }
-*/
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenReadingValueOfAnyKey_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
