@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenChangingItem_ThenNewValueIsIn
 
   thenMapContainsItems(map, { { 42, "Alice" }, { 27, "Bob" } });
 }
-/*
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenCreatingCopy_ThenBothMapsAreEmpty,
                               K,
                               TestedKeyTypes)
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenCreatingCopy_ThenAllItemsAreC
   thenMapContainsItems(map, { { 1410, "Grunwald" }, { 753, "Rome" }, { 1789, "Paris" } });
   thenMapContainsItems(other, { { 753, "Rome" }, { 1789, "Paris" } });
 }
-
+/*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenMovingToOther_ThenBothMapsAreEmpty,
                               K,
                               TestedKeyTypes)
@@ -521,7 +521,59 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapB
 
   BOOST_CHECK(map.isEmpty());
 }
-/*
+
+// MY TEST TODO modify
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKeyAndAddingNew_ThenNewArePresent,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.begin();
+  it++;
+
+  thenMapContainsItems(map, { { 34, "abc" }, { 48, "xkcd" } });
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenThreeItemMap_WhenDereferencingDecrementedEndIterator_TheBiggesKeyIsReturned,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.end();
+  it--;
+
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenDecrementingBeginThrowsException,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+
+  BOOST_CHECK_THROW(map.begin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.begin()), std::out_of_range);
+  BOOST_CHECK_THROW(map.cbegin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.cbegin()), std::out_of_range);
+
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenErasingEnd_ThenExceptionIsThrown,
                               K,
                               TestedKeyTypes)
@@ -552,7 +604,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingItemByIterator_Then
 
   BOOST_CHECK(map.isEmpty());
 }
-*/
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoEmptyMaps_WhenComparingThem_ThenTheyAreReportedAsEqual,
                               K,
                               TestedKeyTypes)
