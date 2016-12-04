@@ -35,7 +35,6 @@ private: // TODO move to lower private section
 
     //value_type data; TODO how to use const key_type?
     std::pair<key_type, mapped_type> data;
-    //BinaryNode(BinaryNode *left, BinaryNode *right, BinaryNode *parent) : left(left), right(right), parent(parent) {} // todo is used?
     BinaryNode() {}
   };
   BinaryNode *head; // super head
@@ -48,6 +47,25 @@ private: // TODO move to lower private section
     head->right = head; // used for detecting illegal --begin() with empty collection
     head->parent = nullptr;
     size = 0;
+  }
+
+  BinaryNode* getMinimalSubtreeNode(BinaryNode *node)
+  {
+    while(node->left != nullptr)
+      node = node->left;
+    return node;
+  }
+
+  void moveTree(BinaryNode *node1, BinaryNode *node2) // todo node names!
+  {
+    if(node1->parent == nullptr)
+      head->left = node2;
+    else if (node1 == node1->parent->left)
+      node1->parent->left = node2;
+    else
+      node1->parent->right = node2;
+    if(node2 != nullptr)
+      node2->parent = node1->parent;
   }
 
 
@@ -64,16 +82,24 @@ public:
       operator[](element.first) = element.second;
   }
 
-  TreeMap(const TreeMap& other)
+  TreeMap(const TreeMap& other) // todo can be done better?
   {
-    (void)other;
-    throw std::runtime_error("TODOs");
+    setup();
+    for(auto element : other)
+    {
+      operator[](element.first) = element.second;
+    }
   }
 
   TreeMap(TreeMap&& other)
   {
     (void)other;
     throw std::runtime_error("TODOi");
+  }
+
+  ~TreeMap()
+  {
+
   }
 
   TreeMap& operator=(const TreeMap& other)
@@ -101,7 +127,6 @@ public:
     newNode->data = std::make_pair(key, mapped_type{});
     if(isEmpty()) {
         newNode->parent = head;
-
 
         head->left = newNode; // list no longer empty
 
@@ -187,52 +212,41 @@ public:
 
   void remove(const key_type& key)
   {
-    // TODO REWRITE
-
     if(isEmpty())
       throw std::out_of_range("cannot remove, empty list");
     auto nodeBeingRemoved = find(key).currentNode;
     if(nodeBeingRemoved == head)
       throw std::out_of_range("cannot remove, element does not exist");
 
-
-    // No children
-    if(nodeBeingRemoved->left == nullptr && nodeBeingRemoved->right == nullptr)
-    {
-      if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
-        nodeBeingRemoved->parent->left = nullptr;
-      else
-        nodeBeingRemoved->parent->right = nullptr;
-      if(nodeBeingRemoved->parent == head) head->left = head; // todo required to detect empty list...
+    if(nodeBeingRemoved->left == nullptr)
+      moveTree(nodeBeingRemoved, nodeBeingRemoved->right);
+    else if(nodeBeingRemoved->right == nullptr)
+      moveTree(nodeBeingRemoved, nodeBeingRemoved->left);
+    else {
+      BinaryNode *tmp = getMinimalSubtreeNode(nodeBeingRemoved->right);
+      if(tmp->parent != nodeBeingRemoved) {
+        moveTree(tmp, tmp->right);
+        tmp->right = nodeBeingRemoved->right;
+        tmp->right->parent = tmp;
+      }
+      moveTree(nodeBeingRemoved, tmp);
+      tmp->left = nodeBeingRemoved->left;
+      tmp->left->parent = tmp;
     }
-
-    // 1 child
-    if(nodeBeingRemoved->left == nullptr ) {
-       if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
-        nodeBeingRemoved->parent->left = nodeBeingRemoved->right;
-        else
-        nodeBeingRemoved->parent->right = nodeBeingRemoved->right;
-
-    } else if(nodeBeingRemoved->right == nullptr) {
-     if(nodeBeingRemoved->parent->left == nodeBeingRemoved)
-        nodeBeingRemoved->parent->left = nodeBeingRemoved->left;
-    else
-        nodeBeingRemoved->parent->right = nodeBeingRemoved->left;
-
-    }
-
-
-
-
 
     delete nodeBeingRemoved;
     size--;
+    if(size == 0) { // empty map detection
+        head->right = head;
+        head->left = head;
+    }
   }
 
   void remove(const const_iterator& it)
   {
-    (void)it;
-    throw std::runtime_error("TODO2");
+    if(it == end())
+      throw std::out_of_range("cannot erase end");
+    remove(it->first);
   }
 
   size_type getSize() const
