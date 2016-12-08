@@ -55,7 +55,7 @@ private: // TODO move to lower private section
     return node;
   }
 
-  void moveTree(BinaryNode *node1, BinaryNode *node2) // todo node names!
+  void moveTree(BinaryNode *node1, BinaryNode *node2)
   {
     if(node1->parent == nullptr)
       head->left = node2;
