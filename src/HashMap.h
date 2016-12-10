@@ -29,87 +29,96 @@ public:
 private:
     class SinglyLinkedList
     {
+
       class Node
       {
-      public:
+       public:
         Node *next;
         Node() : next(nullptr) {};
         virtual ~Node() {}
       };
+
       class DataNode : public Node
       {
-      public:
+       public:
         value_type data;
         DataNode(const key_type &key) : Node(), data({key, mapped_type{}}) {}
       };
-      Node *head;
-      Node *tail;
-    public:
-      SinglyLinkedList() : head(new Node())
-      {
-        tail = head;
-      }
-      SinglyLinkedList(const SinglyLinkedList& other) : SinglyLinkedList()
-      {
-        auto it = other.cbegin();
-        while(it != other.cend())
-        {
-          append((*it).first) = (*it).second;
-          ++it;
-        }
-      }
-    SinglyLinkedList& operator=(SinglyLinkedList other)
-  {
-    if(&other == this)
-      return *this;
-    swap(*this, other);
-    return *this;
-  }
-      ~SinglyLinkedList()
-      {
-        auto it = cbegin(), prevIt = cbegin();
-        while(it != cend()) {
-          prevIt = it;
-          ++it;
-          delete prevIt.currentNode;
-        }
+
+      public:
+       Node *head;
+       Node *tail;
+
+       SinglyLinkedList() : head(new Node())
+       {
+         tail = head;
+       }
+
+       SinglyLinkedList(const SinglyLinkedList& other) : SinglyLinkedList()
+       {
+         auto it = other.begin();
+         while(it != other.end())
+         {
+           append((*it).first) = (*it).second;
+           ++it;
+         }
+       }
+
+       SinglyLinkedList& operator=(SinglyLinkedList other)
+       {
+         if(&other == this)
+           return *this;
+         swap(*this, other);
+           return *this;
+       }
+
+       ~SinglyLinkedList()
+       {
+         auto it = begin(), prevIt = begin();
+         while(it != end()) {
+           prevIt = it;
+           ++it;
+           delete prevIt.currentNode;
+         }
         delete head;
-      }
-      mapped_type& append(const key_type &key)
-      {
-            DataNode *newNode = new DataNode(key);
-            tail->next = newNode;
-            tail = newNode;
-            return newNode->data.second;
-      }
+       }
 
-    void swap(SinglyLinkedList& first, SinglyLinkedList& second)
-  {
-    using std::swap;
-    swap(first.head, second.head);
-    swap(first.tail, second.tail);
-  }
+       mapped_type& append(const key_type &key)
+       {
+         DataNode *newNode = new DataNode(key);
+         tail->next = newNode;
+         tail = newNode;
+         return newNode->data.second;
+       }
 
+       void swap(SinglyLinkedList& first, SinglyLinkedList& second)
+       {
+         using std::swap;
+         swap(first.head, second.head);
+         swap(first.tail, second.tail);
+       }
 
       bool isEmpty() const
       {
         return head->next == nullptr;
       }
+
       value_type& getDataForKey(const key_type &key) const
       {
-        for(auto it = cbegin(); it != cend(); ++it)
+        for(auto it = begin(); it != end(); ++it)
           if((*it).first == key)
             return *it;
         throw std::out_of_range("element with given key does not exist");
       }
 
-      class BucketConstIterator
+      class BucketIterator
       {
+       public:
+        Node *currentNode;
 
-      public:
-        Node *currentNode; // todo public vs private
-        explicit BucketConstIterator(Node *startNode) : currentNode(startNode) {}
-        BucketConstIterator& operator++()
+        explicit BucketIterator(Node *startNode) : currentNode(startNode) {}
+
+        BucketIterator& operator++()
         {
           if(currentNode != nullptr)
             currentNode = currentNode->next;
@@ -117,6 +126,7 @@ private:
             throw std::out_of_range("current node is nullptr");
           return *this;
         }
+
         value_type& operator*() const
         {
           if(currentNode == nullptr)
@@ -125,36 +135,36 @@ private:
             return currentData->data;
           throw std::invalid_argument("cannot dereference nondata node");
         }
-        bool operator!=(const BucketConstIterator& other) const
+
+        bool operator!=(const BucketIterator& other) const
         {
           return currentNode == other.currentNode;
         }
       };
 
-        void remove(const key_type &key)
+      void remove(const key_type &key)
       {
-         bool wasFound = false;
-         auto iteratorBeforeRemElem = cbegin();
-         auto iteratorToRemElem = cbegin();
-         for( ; iteratorToRemElem != cend(); ++iteratorToRemElem) {
-           if((*iteratorToRemElem).first == key) {
-             wasFound = true;
-             break;
-            }
-           iteratorBeforeRemElem = iteratorToRemElem;
-
+        bool wasFound = false;
+        auto iteratorBeforeRemElem = begin();
+        auto iteratorToRemElem = begin();
+        for( ; iteratorToRemElem != end(); ++iteratorToRemElem) {
+          if((*iteratorToRemElem).first == key) {
+            wasFound = true;
+            break;
           }
+          iteratorBeforeRemElem = iteratorToRemElem;
+        }
 
         if(!wasFound)
-        throw std::out_of_range("cannot remove, element does not exist");
+          throw std::out_of_range("cannot remove, element does not exist");
 
         if(iteratorToRemElem.currentNode == tail) {
           tail = iteratorBeforeRemElem.currentNode;
           tail->next = nullptr;
         }
         else
-            iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next; // FIX THIS HERE TODO !
-        if(head->next == iteratorToRemElem.currentNode)    {
+          iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
+        if(head->next == iteratorToRemElem.currentNode) {
           head->next = nullptr;
           tail = head;
         }
@@ -162,30 +172,15 @@ private:
         delete iteratorToRemElem.currentNode;
       }
 
-     /* Iterator begin()
+      BucketIterator begin() const
       {
-        return Iterator(head->next);
+        return BucketIterator(head->next);
       }
-      Iterator end()
-      {
-        return Iterator(tail);
-      }*/
-      BucketConstIterator cbegin() const
-      {
-        return BucketConstIterator(head->next);
-      }
-      BucketConstIterator cend() const
-      {
-        return BucketConstIterator(tail);
-      }
-/*
-      class Iterator : public BucketConstIterator
-      {
-        explicit Iterator() {}
-        Iterator(const BucketConstIterator& other)
-        { }
 
-      };*/
+      BucketIterator end() const
+      {
+        return BucketIterator(tail);
+      }
     };
 
   key_type getSmallestKey() const
@@ -197,7 +192,7 @@ private:
 
     for(int i = 0; i < NO_OF_BUCKETS; i++)
      if(!buckets[i].isEmpty()) {
-       for(auto bucketElement = buckets[i].cbegin(); bucketElement != buckets[i].cend(); ++bucketElement) {
+       for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
         if(!wasAnyKeyFound) {
           smallestKey = (*bucketElement).first;
           wasAnyKeyFound = true;
@@ -216,7 +211,7 @@ private:
       throw std::invalid_argument("empty map has no elements");
       for(int i = 0; i < NO_OF_BUCKETS; i++) {
         if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].cbegin(); bucketElement != buckets[i].cend(); ++bucketElement) {
+          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
             if(!greaterKeyWasFound)
             {
               if((*bucketElement).first > key) {
@@ -241,7 +236,7 @@ private:
       throw std::invalid_argument("empty map has no elements");
     for(int i = 0; i < NO_OF_BUCKETS; i++) {
         if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].cbegin(); bucketElement != buckets[i].cend(); ++bucketElement) {
+          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
             if(!smallerKeyWasFound)
             {
               if((*bucketElement).first < key) {
@@ -257,7 +252,6 @@ private:
       }
      return previousKey;
   }
-
 
   int getHash(const key_type &key) const
   {
@@ -298,13 +292,7 @@ public:
     swap(*this, other);
     return *this;
   }
-/*
-  HashMap& operator=(HashMap&& other)
-  {
-    (void)other;
-    throw std::runtime_error("TODO");
-  }
-*/
+
   void swap(HashMap& first, HashMap& second)
   {
     using std::swap;
@@ -325,13 +313,11 @@ public:
   mapped_type& operator[](const key_type& key) // TODO call getHash  once?
   {
     try {
-          return buckets[getHash(key)].getDataForKey(key).second;
-        } catch(std::out_of_range e) {
-            size++;
-            return buckets[getHash(key)].append(key);
-        }
-
-
+      return buckets[getHash(key)].getDataForKey(key).second;
+    } catch(std::out_of_range e) {
+      size++;
+      return buckets[getHash(key)].append(key);
+    }
   }
 
   const mapped_type& valueOf(const key_type& key) const
@@ -355,13 +341,10 @@ public:
     if(isEmpty())
       return cend();
     auto it = ConstIterator(key, getHash(key), *this);
-    try
-    {
-     *it; // todo verify
-    }
-    catch(std::out_of_range e)
-    {
-     return cend();
+    try {
+      *it; // todo verify
+    } catch(std::out_of_range e) {
+      return cend();
     }
     return it;
   }
@@ -371,20 +354,17 @@ public:
     if(isEmpty())
       return end();
     auto it = ConstIterator(key, getHash(key), *this);
-    try
-    {
-     *it; // todo verify
-    }
-    catch(std::out_of_range e)
-    {
-     return end();
+    try {
+      *it; // todo verify
+    } catch(std::out_of_range e) {
+      return end();
     }
     return it;
   }
 
   void remove(const key_type& key)
   {
-     if(isEmpty())
+    if(isEmpty())
       throw std::out_of_range("cannot remove, empty list");
 
     buckets[getHash(key)].remove(key);
@@ -480,13 +460,7 @@ public:
   explicit ConstIterator(key_type currentKey, int currentKeyBucket, const HashMap& iteratorsHashMap)
    : currentKey(currentKey), currentKeyBucket(currentKeyBucket), iteratorsHashMap(iteratorsHashMap)
   {}
-/*
-  ConstIterator(const ConstIterator& other)
-  {
-    (void)other;
-    throw std::runtime_error("TODO");
-  }
-*/
+
   ConstIterator& operator++()
   {
     if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
