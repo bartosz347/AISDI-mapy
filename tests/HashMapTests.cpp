@@ -16,7 +16,7 @@ using Map = aisdi::HashMap<K, std::string>;
 using std::begin;
 using std::end;
 
-BOOST_AUTO_TEST_SUITE(MapsTests)
+BOOST_AUTO_TEST_SUITE(HashMapTests)
 
 template <typename K>
 void thenMapContainsItems(const Map<K>& map,
@@ -34,7 +34,7 @@ void thenMapContainsItems(const Map<K>& map,
                         << "\" got: \"" << it->second << "\")");
   }
 }
-/*
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenMap_WhenCreatedWithDefaultConstructor_ThenItIsEmpty,
                               K,
                               TestedKeyTypes)
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenSearchingForKey_ThenItemIsRet
   BOOST_CHECK_EQUAL(it->first, 123);
   BOOST_CHECK_EQUAL(it->second, "It!");
 }
-
+/*
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenGettingSize_ThenZeroIsReturnd,
                               K,
                               TestedKeyTypes)

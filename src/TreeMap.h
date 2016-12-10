@@ -191,7 +191,7 @@ public:
 
   const_iterator find(const key_type& key) const
   {
-    if(size == 0)
+    if(isEmpty())
       return cend();
 
     BinaryNode *current = head->left;
