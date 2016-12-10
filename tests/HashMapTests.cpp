@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByWrongKey_ThenE
   BOOST_CHECK_THROW(map.remove(1), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByKey_ThenItemIsRemoved,
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByKey_ThenItemIszd,
                               K,
                               TestedKeyTypes)
 {
@@ -509,6 +509,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueThatHasChildByKe
   map.remove(42);
 
   thenMapContainsItems(map, { { 27, "Bob" } });
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingByBeginIterator_ThenItemIsRemoved,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 42, "Alice" }, { 27, "Bob" } };
+
+  map.remove(map.begin());
+
+  thenMapContainsItems(map, { { 42, "Alice" } });
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapBecomesEmpty,

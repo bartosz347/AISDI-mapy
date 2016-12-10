@@ -102,7 +102,7 @@ public:
   {
     if(isEmpty())
       return cend();
-    auto it = ConstIterator(key, getHash(key), *this);
+    auto it = ConstIterator(key, *this);
     try {
       *it;
     } catch(std::out_of_range e) {
@@ -115,7 +115,7 @@ public:
   {
     if(isEmpty())
       return end();
-    auto it = ConstIterator(key, getHash(key), *this);
+    auto it = ConstIterator(key, *this);
     try {
       *it;
     } catch(std::out_of_range e) {
@@ -135,7 +135,7 @@ public:
 
   void remove(const const_iterator& it)
   {
-    if(it.currentKeyBucket == -1 && static_cast<int>(it.currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
+    if(it.currentKeyBucket == -1)
       throw std::out_of_range("cannot remove end");
     remove(it.currentKey);
   }
@@ -183,7 +183,7 @@ public:
       return ConstIterator(0, -1, *this);
     else {
       key_type key = getSmallestKey();
-      return ConstIterator(key, getHash(key), *this); // TODO better solution for empty list ?
+      return ConstIterator(key, *this);
     }
   }
 
@@ -322,10 +322,13 @@ public:
   explicit ConstIterator(key_type currentKey, int currentKeyBucket, const HashMap& iteratorsHashMap)
    : currentKey(currentKey), currentKeyBucket(currentKeyBucket), iteratorsHashMap(iteratorsHashMap)
   {}
+  explicit ConstIterator(key_type currentKey, const HashMap& iteratorsHashMap)
+   : currentKey(currentKey), currentKeyBucket(iteratorsHashMap.getHash(currentKey)), iteratorsHashMap(iteratorsHashMap)
+  {}
 
   ConstIterator& operator++()
   {
-    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
+    if(currentKeyBucket == -1)
        throw std::out_of_range("cannot increment end");
     key_type previousKey = currentKey;
     currentKey = iteratorsHashMap.getNext(currentKey);
@@ -346,13 +349,12 @@ public:
 
   ConstIterator& operator--()
   {
-    if(currentKeyBucket == -1 && static_cast<int>(currentKey) != -1) // TODO other workaround than static cast, cause it does not solve the problem
+    if(*this == iteratorsHashMap.begin())
       throw std::out_of_range("cannot decrement begin, empty list");
-    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) {
+    if(currentKeyBucket == -1) {
       key_type biggestKey = iteratorsHashMap.getBiggestKey();
-      ConstIterator beginIt(biggestKey, iteratorsHashMap.getHash(biggestKey), iteratorsHashMap);
-      this->currentKeyBucket = beginIt.currentKeyBucket;
-      this->currentKey = beginIt.currentKey;
+      this->currentKeyBucket = iteratorsHashMap.getHash(biggestKey);
+      this->currentKey = biggestKey;
       return *this;
     }
 
@@ -374,7 +376,7 @@ public:
 
   reference operator*() const
   {
-    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
+    if(currentKeyBucket == -1)
       throw std::out_of_range("cannot dereference end");
     return iteratorsHashMap.buckets[currentKeyBucket].getDataForKey(currentKey);
   }
@@ -386,7 +388,7 @@ public:
 
   bool operator==(const ConstIterator& other) const
   {
-    if(currentKeyBucket == -1 && currentKeyBucket == other.currentKeyBucket) // iterators for empty list
+    if(currentKeyBucket == -1 && currentKeyBucket == other.currentKeyBucket) // todo iterators for empty list
       return true;
 
     return currentKey == other.currentKey;
