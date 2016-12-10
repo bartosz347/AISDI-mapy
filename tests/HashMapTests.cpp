@@ -248,8 +248,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenSearchingForKey_ThenItemIsRet
   BOOST_CHECK_EQUAL(it->first, 123);
   BOOST_CHECK_EQUAL(it->second, "It!");
 }
-/*
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenGettingSize_ThenZeroIsReturnd,
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenGettingSize_ThenZeroIsReturned,
                               K,
                               TestedKeyTypes)
 {
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenEmptyMap_WhenGettingSize_ThenZeroIsReturnd,
   BOOST_CHECK_EQUAL(map.getSize(), 0);
 }
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenGettingSize_ThenItemCountIsReturnd,
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNonEmptyMap_WhenGettingSize_ThenItemCountIsReturned,
                               K,
                               TestedKeyTypes)
 {
@@ -499,6 +499,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByKey_ThenItemIs
   thenMapContainsItems(map, { { 42, "Alice" } });
 }
 
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueThatHasChildByKey_ThenItemIsRemoved,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 42, "Alice" }, { 27, "Bob" } };
+
+  map.remove(42);
+
+  thenMapContainsItems(map, { { 27, "Bob" } });
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapBecomesEmpty,
                               K,
                               TestedKeyTypes)
@@ -508,6 +520,58 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapB
   map.remove(27);
 
   BOOST_CHECK(map.isEmpty());
+}
+
+// MY TEST TODO modify
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKeyAndAddingNew_ThenNewArePresent,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.begin();
+  it++;
+
+  thenMapContainsItems(map, { { 34, "abc" }, { 48, "xkcd" } });
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenThreeItemMap_WhenDereferencingDecrementedEndIterator_TheBiggesKeyIsReturned,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.end();
+  it--;
+
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenDecrementingBeginThrowsException,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+
+  BOOST_CHECK_THROW(map.begin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.begin()), std::out_of_range);
+  BOOST_CHECK_THROW(map.cbegin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.cbegin()), std::out_of_range);
+
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenErasingEnd_ThenExceptionIsThrown,
@@ -593,5 +657,5 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
 
 // ConstIterator is tested via Iterator methods.
 // If Iterator methods are to be changed, then new ConstIterator tests are required.
-*/
+
 BOOST_AUTO_TEST_SUITE_END()

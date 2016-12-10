@@ -41,7 +41,6 @@ private:
       public:
         value_type data;
         DataNode(const key_type &key) : Node(), data({key, mapped_type{}}) {}
-
       };
       Node *head;
       Node *tail;
@@ -50,13 +49,48 @@ private:
       {
         tail = head;
       }
+      SinglyLinkedList(const SinglyLinkedList& other) : SinglyLinkedList()
+      {
+        auto it = other.cbegin();
+        while(it != other.cend())
+        {
+          append((*it).first) = (*it).second;
+          ++it;
+        }
+      }
+    SinglyLinkedList& operator=(SinglyLinkedList other)
+  {
+    if(&other == this)
+      return *this;
+    swap(*this, other);
+    return *this;
+  }
+      ~SinglyLinkedList()
+      {
+        auto it = cbegin(), prevIt = cbegin();
+        while(it != cend()) {
+          prevIt = it;
+          ++it;
+          delete prevIt.currentNode;
+        }
+        delete head;
+      }
       mapped_type& append(const key_type &key)
       {
-        DataNode *newNode = new DataNode(key);
-        tail->next = newNode;
-        tail = newNode;
-        return newNode->data.second;
+            DataNode *newNode = new DataNode(key);
+            tail->next = newNode;
+            tail = newNode;
+            return newNode->data.second;
       }
+
+    void swap(SinglyLinkedList& first, SinglyLinkedList& second)
+  {
+    using std::swap;
+    swap(first.head, second.head);
+    swap(first.tail, second.tail);
+  }
+
+
       bool isEmpty() const
       {
         return head->next == nullptr;
@@ -66,33 +100,22 @@ private:
         for(auto it = cbegin(); it != cend(); ++it)
           if((*it).first == key)
             return *it;
-        throw std::invalid_argument("element with given key does not exist");
+        throw std::out_of_range("element with given key does not exist");
       }
-     /*void remove(Iterator &iteratorToRemElem)
-      {
-        auto iteratorBeforeRemElem = begin();
-        while(iteratorBeforeRemElem.currentNode->next != iteratorToRemElem.currentNode)
-          iteratorBeforeRemElem++;
-        if(iteratorToRemElem.currentNode == tail) {
-          tail = iteratorToRemElem.currentNode;
-          iteratorToRemElem.currentNode->next = nullptr;
-        } else
-          iteratorToRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
-
-        delete iteratorToRemElem.currentNode;
-      }*/
 
       class BucketConstIterator
       {
-        Node *currentNode;
+
       public:
+        Node *currentNode; // todo public vs private
         explicit BucketConstIterator(Node *startNode) : currentNode(startNode) {}
-        operator++()
+        BucketConstIterator& operator++()
         {
           if(currentNode != nullptr)
             currentNode = currentNode->next;
           else
             throw std::out_of_range("current node is nullptr");
+          return *this;
         }
         value_type& operator*() const
         {
@@ -100,13 +123,45 @@ private:
             throw std::invalid_argument("element does not exist");
           if(DataNode *currentData = dynamic_cast<DataNode*>(currentNode))
             return currentData->data;
-          // TODO protection against non data node dereference
+          throw std::invalid_argument("cannot dereference nondata node");
         }
-        operator!=(const BucketConstIterator& other) const
+        bool operator!=(const BucketConstIterator& other) const
         {
           return currentNode == other.currentNode;
         }
       };
+
+        void remove(const key_type &key)
+      {
+         bool wasFound = false;
+         auto iteratorBeforeRemElem = cbegin();
+         auto iteratorToRemElem = cbegin();
+         for( ; iteratorToRemElem != cend(); ++iteratorToRemElem) {
+           if((*iteratorToRemElem).first == key) {
+             wasFound = true;
+             break;
+            }
+           iteratorBeforeRemElem = iteratorToRemElem;
+
+          }
+
+        if(!wasFound)
+        throw std::out_of_range("cannot remove, element does not exist");
+
+        if(iteratorToRemElem.currentNode == tail) {
+          tail = iteratorBeforeRemElem.currentNode;
+          tail->next = nullptr;
+        }
+        else
+            iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next; // FIX THIS HERE TODO !
+        if(head->next == iteratorToRemElem.currentNode)    {
+          head->next = nullptr;
+          tail = head;
+        }
+
+        delete iteratorToRemElem.currentNode;
+      }
+
      /* Iterator begin()
       {
         return Iterator(head->next);
@@ -211,7 +266,7 @@ private:
   }
 
   static const int NO_OF_BUCKETS = 16000;
-  SinglyLinkedList buckets[NO_OF_BUCKETS];
+  std::array<SinglyLinkedList, NO_OF_BUCKETS> buckets;
   size_type size;
 
 
@@ -219,34 +274,47 @@ public:
   HashMap() : size(0)
   {}
 
-  HashMap(std::initializer_list<value_type> list)
+  HashMap(std::initializer_list<value_type> list) : size(0)
   {
-    (void)list; // disables "unused argument" warning, can be removed when method is implemented.
-    throw std::runtime_error("TODO");
+    for(auto element: list)
+      operator[](element.first) = element.second;
   }
 
-  HashMap(const HashMap& other)
+  HashMap(const HashMap& other) : size(other.size)
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+    for(int i = 0; i < NO_OF_BUCKETS; i++)
+      buckets[i] = other.buckets[i];
   }
 
-  HashMap(HashMap&& other)
+  HashMap(HashMap&& other) : HashMap()
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+    swap(*this, other);
   }
 
-  HashMap& operator=(const HashMap& other)
+  HashMap& operator=(HashMap other)
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+    if(&other == this)
+      return *this;
+    swap(*this, other);
+    return *this;
   }
-
+/*
   HashMap& operator=(HashMap&& other)
   {
     (void)other;
     throw std::runtime_error("TODO");
+  }
+*/
+  void swap(HashMap& first, HashMap& second)
+  {
+    using std::swap;
+    swap(first.buckets, second.buckets);
+    swap(first.size, second.size);
+  }
+
+  ~HashMap()
+  {
+
   }
 
   bool isEmpty() const
@@ -254,23 +322,32 @@ public:
     return size == 0;
   }
 
-  mapped_type& operator[](const key_type& key)
+  mapped_type& operator[](const key_type& key) // TODO call getHash  once?
   {
-    // TODO what if current key alreade in HashMap ?
-    size++;
-    return buckets[getHash(key)].append(key);
+    try {
+          return buckets[getHash(key)].getDataForKey(key).second;
+        } catch(std::out_of_range e) {
+            size++;
+            return buckets[getHash(key)].append(key);
+        }
+
+
   }
 
   const mapped_type& valueOf(const key_type& key) const
   {
-    (void)key;
-    throw std::runtime_error("TODO");
+    if(isEmpty())
+      throw std::out_of_range("empty map, cannot get value");
+
+    return buckets[getHash(key)].getDataForKey(key).second; // todo should use const getDataFor... ?
   }
 
   mapped_type& valueOf(const key_type& key)
   {
-    (void)key;
-    throw std::runtime_error("TODO");
+    if(isEmpty())
+      throw std::out_of_range("empty map, cannot get value");
+
+    return buckets[getHash(key)].getDataForKey(key).second;
   }
 
   const_iterator find(const key_type& key) const
@@ -282,7 +359,7 @@ public:
     {
      *it; // todo verify
     }
-    catch(std::invalid_argument e)
+    catch(std::out_of_range e)
     {
      return cend();
     }
@@ -298,7 +375,7 @@ public:
     {
      *it; // todo verify
     }
-    catch(std::invalid_argument e)
+    catch(std::out_of_range e)
     {
      return end();
     }
@@ -307,25 +384,40 @@ public:
 
   void remove(const key_type& key)
   {
-    (void)key;
-    throw std::runtime_error("TODO");
+     if(isEmpty())
+      throw std::out_of_range("cannot remove, empty list");
+
+    buckets[getHash(key)].remove(key);
+    size--;
   }
 
   void remove(const const_iterator& it)
   {
-    (void)it;
-    throw std::runtime_error("TODO");
+    if(it.currentKeyBucket == -1 && static_cast<int>(it.currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
+      throw std::out_of_range("cannot remove end");
+    remove(it.currentKey);
   }
 
   size_type getSize() const
   {
-    throw std::runtime_error("TODO");
+    return size;
   }
 
   bool operator==(const HashMap& other) const
   {
-    (void)other;
-    throw std::runtime_error("TODO");
+    if(size != other.size)
+      return false;
+    auto otherIt = other.cbegin();
+    auto ownIt = cbegin();
+
+    for(size_type i = 0; i < size; i++)
+    {
+        if(!(otherIt->first == ownIt->first && otherIt->second == ownIt->second))
+            return false;
+        otherIt++;
+        ownIt++;
+    }
+    return true;
   }
 
   bool operator!=(const HashMap& other) const
@@ -378,6 +470,7 @@ public:
   using value_type = typename HashMap::value_type;
   using pointer = const typename HashMap::value_type*;
 
+  friend class HashMap;
 private:
   key_type currentKey;
   int currentKeyBucket;
@@ -396,7 +489,7 @@ public:
 */
   ConstIterator& operator++()
   {
-    if(currentKeyBucket == -1 && currentKey == -1)
+    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
        throw std::out_of_range("cannot increment end");
     key_type previousKey = currentKey;
     currentKey = iteratorsHashMap.getNext(currentKey);
@@ -417,7 +510,7 @@ public:
 
   ConstIterator& operator--()
   {
-    if(currentKeyBucket == -1 && currentKey != -1)
+    if(currentKeyBucket == -1 && static_cast<int>(currentKey) != -1) // TODO other workaround than static cast, cause it does not solve the problem
        throw std::out_of_range("cannot decrement begin, empty list");
 
     if(currentKeyBucket == -1 && currentKeyBucket == -1) {
@@ -445,7 +538,7 @@ public:
 
   reference operator*() const
   {
-    if(currentKeyBucket == -1 && currentKey == -1)
+    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) // TODO other workaround than static cast, cause it does not solve the problem
       throw std::out_of_range("cannot dereference end");
     return iteratorsHashMap.buckets[currentKeyBucket].getDataForKey(currentKey);
   }
