@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <utility>
 #include <functional>
+#include <array>
 
 namespace aisdi
 {
