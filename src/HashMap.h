@@ -23,248 +23,10 @@ public:
 
   class ConstIterator;
   class Iterator;
+  class SinglyLinkedList;
   using iterator = Iterator;
   using const_iterator = ConstIterator;
 
-private:
-    class SinglyLinkedList
-    {
-
-      class Node
-      {
-       public:
-        Node *next;
-        Node() : next(nullptr) {};
-        virtual ~Node() {}
-      };
-
-      class DataNode : public Node
-      {
-       public:
-        value_type data;
-        DataNode(const key_type &key) : Node(), data({key, mapped_type{}}) {}
-      };
-
-      public:
-       Node *head;
-       Node *tail;
-
-       SinglyLinkedList() : head(new Node())
-       {
-         tail = head;
-       }
-
-       SinglyLinkedList(const SinglyLinkedList& other) : SinglyLinkedList()
-       {
-         auto it = other.begin();
-         while(it != other.end())
-         {
-           append((*it).first) = (*it).second;
-           ++it;
-         }
-       }
-
-       SinglyLinkedList& operator=(SinglyLinkedList other)
-       {
-         if(&other == this)
-           return *this;
-         swap(*this, other);
-           return *this;
-       }
-
-       ~SinglyLinkedList()
-       {
-         auto it = begin(), prevIt = begin();
-         while(it != end()) {
-           prevIt = it;
-           ++it;
-           delete prevIt.currentNode;
-         }
-        delete head;
-       }
-
-       mapped_type& append(const key_type &key)
-       {
-         DataNode *newNode = new DataNode(key);
-         tail->next = newNode;
-         tail = newNode;
-         return newNode->data.second;
-       }
-
-       void swap(SinglyLinkedList& first, SinglyLinkedList& second)
-       {
-         using std::swap;
-         swap(first.head, second.head);
-         swap(first.tail, second.tail);
-       }
-
-      bool isEmpty() const
-      {
-        return head->next == nullptr;
-      }
-
-      value_type& getDataForKey(const key_type &key) const
-      {
-        for(auto it = begin(); it != end(); ++it)
-          if((*it).first == key)
-            return *it;
-        throw std::out_of_range("element with given key does not exist");
-      }
-
-      class BucketIterator
-      {
-       public:
-        Node *currentNode;
-
-        explicit BucketIterator(Node *startNode) : currentNode(startNode) {}
-
-        BucketIterator& operator++()
-        {
-          if(currentNode != nullptr)
-            currentNode = currentNode->next;
-          else
-            throw std::out_of_range("current node is nullptr");
-          return *this;
-        }
-
-        value_type& operator*() const
-        {
-          if(currentNode == nullptr)
-            throw std::invalid_argument("element does not exist");
-          if(DataNode *currentData = dynamic_cast<DataNode*>(currentNode))
-            return currentData->data;
-          throw std::invalid_argument("cannot dereference nondata node");
-        }
-
-        bool operator!=(const BucketIterator& other) const
-        {
-          return currentNode == other.currentNode;
-        }
-      };
-
-      void remove(const key_type &key)
-      {
-        bool wasFound = false;
-        auto iteratorBeforeRemElem = begin();
-        auto iteratorToRemElem = begin();
-        for( ; iteratorToRemElem != end(); ++iteratorToRemElem) {
-          if((*iteratorToRemElem).first == key) {
-            wasFound = true;
-            break;
-          }
-          iteratorBeforeRemElem = iteratorToRemElem;
-        }
-
-        if(!wasFound)
-          throw std::out_of_range("cannot remove, element does not exist");
-
-        if(iteratorToRemElem.currentNode == tail) {
-          tail = iteratorBeforeRemElem.currentNode;
-          tail->next = nullptr;
-        }
-        else
-          iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
-        if(head->next == iteratorToRemElem.currentNode) {
-          head->next = nullptr;
-          tail = head;
-        }
-
-        delete iteratorToRemElem.currentNode;
-      }
-
-      BucketIterator begin() const
-      {
-        return BucketIterator(head->next);
-      }
-
-      BucketIterator end() const
-      {
-        return BucketIterator(tail);
-      }
-    };
-
-  key_type getSmallestKey() const
-  {
-    key_type smallestKey = 0;
-    bool wasAnyKeyFound = false;
-    if(isEmpty())
-      throw std::invalid_argument("empty map has no smallest element");
-
-    for(int i = 0; i < NO_OF_BUCKETS; i++)
-     if(!buckets[i].isEmpty()) {
-       for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
-        if(!wasAnyKeyFound) {
-          smallestKey = (*bucketElement).first;
-          wasAnyKeyFound = true;
-        } else if((*bucketElement).first < smallestKey)
-          smallestKey = (*bucketElement).first;
-       }
-     }
-    return smallestKey;
-  }
-
-  key_type getNext(const key_type &key) const
-  {
-    key_type nextKey = key;
-    bool greaterKeyWasFound = false;
-    if(isEmpty())
-      throw std::invalid_argument("empty map has no elements");
-      for(int i = 0; i < NO_OF_BUCKETS; i++) {
-        if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
-            if(!greaterKeyWasFound)
-            {
-              if((*bucketElement).first > key) {
-                nextKey = (*bucketElement).first;
-                greaterKeyWasFound = true;
-              }
-            }
-            else
-              if((*bucketElement).first > key && (*bucketElement).first < nextKey)
-                nextKey = (*bucketElement).first;
-          }
-        }
-      }
-     return nextKey;
-  }
-
-  key_type getPrevious(const key_type &key) const
-  {
-    key_type previousKey = key;
-    bool smallerKeyWasFound = false;
-    if(isEmpty())
-      throw std::invalid_argument("empty map has no elements");
-    for(int i = 0; i < NO_OF_BUCKETS; i++) {
-        if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
-            if(!smallerKeyWasFound)
-            {
-              if((*bucketElement).first < key) {
-                previousKey = (*bucketElement).first;
-                smallerKeyWasFound = true;
-              }
-            }
-            else
-              if((*bucketElement).first < key && (*bucketElement).first > previousKey)
-                previousKey = (*bucketElement).first;
-          }
-        }
-      }
-     return previousKey;
-  }
-
-  int getHash(const key_type &key) const
-  {
-    //const int keysHash = (std::hash<key_type>(key)) % NO_OF_BUCKETS;// TODO use std::hash
-    return key % NO_OF_BUCKETS;
-  }
-
-  static const int NO_OF_BUCKETS = 16000;
-  std::array<SinglyLinkedList, NO_OF_BUCKETS> buckets;
-  size_type size;
-
-
-public:
   HashMap() : size(0)
   {}
 
@@ -310,7 +72,7 @@ public:
     return size == 0;
   }
 
-  mapped_type& operator[](const key_type& key) // TODO call getHash  once?
+  mapped_type& operator[](const key_type& key)
   {
     try {
       return buckets[getHash(key)].getDataForKey(key).second;
@@ -325,7 +87,7 @@ public:
     if(isEmpty())
       throw std::out_of_range("empty map, cannot get value");
 
-    return buckets[getHash(key)].getDataForKey(key).second; // todo should use const getDataFor... ?
+    return buckets[getHash(key)].getDataForKey(key).second;
   }
 
   mapped_type& valueOf(const key_type& key)
@@ -342,7 +104,7 @@ public:
       return cend();
     auto it = ConstIterator(key, getHash(key), *this);
     try {
-      *it; // todo verify
+      *it;
     } catch(std::out_of_range e) {
       return cend();
     }
@@ -355,7 +117,7 @@ public:
       return end();
     auto it = ConstIterator(key, getHash(key), *this);
     try {
-      *it; // todo verify
+      *it;
     } catch(std::out_of_range e) {
       return end();
     }
@@ -439,6 +201,106 @@ public:
   {
     return cend();
   }
+
+private:
+  static const int NO_OF_BUCKETS = 16000;
+  std::array<SinglyLinkedList, NO_OF_BUCKETS> buckets;
+  size_type size;
+
+
+  key_type getSmallestKey() const
+  {
+    key_type smallestKey = 0;
+    bool wasAnyKeyFound = false;
+    if(isEmpty())
+      throw std::invalid_argument("empty map has no smallest element");
+    for(int i = 0; i < NO_OF_BUCKETS; i++)
+     if(!buckets[i].isEmpty()) {
+       for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
+        if(!wasAnyKeyFound) {
+          smallestKey = (*bucketElement).first;
+          wasAnyKeyFound = true;
+        } else if((*bucketElement).first < smallestKey)
+          smallestKey = (*bucketElement).first;
+       }
+     }
+    return smallestKey;
+  }
+
+  key_type getBiggestKey() const
+  {
+    key_type biggestKey = 0;
+    bool wasAnyKeyFound = false;
+    if(isEmpty())
+      throw std::invalid_argument("empty map has no smallest element");
+    for(int i = 0; i < NO_OF_BUCKETS; i++)
+     if(!buckets[i].isEmpty()) {
+       for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
+        if(!wasAnyKeyFound) {
+          biggestKey = (*bucketElement).first;
+          wasAnyKeyFound = true;
+        } else if((*bucketElement).first > biggestKey)
+          biggestKey = (*bucketElement).first;
+       }
+     }
+    return biggestKey;
+  }
+
+  key_type getNext(const key_type &key) const
+  {
+    key_type nextKey = key;
+    bool greaterKeyWasFound = false;
+    if(isEmpty())
+      throw std::invalid_argument("empty map has no elements");
+      for(int i = 0; i < NO_OF_BUCKETS; i++) {
+        if(!buckets[i].isEmpty()) {
+          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
+            if(!greaterKeyWasFound)
+            {
+              if((*bucketElement).first > key) {
+                nextKey = (*bucketElement).first;
+                greaterKeyWasFound = true;
+              }
+            }
+            else
+              if((*bucketElement).first > key && (*bucketElement).first < nextKey)
+                nextKey = (*bucketElement).first;
+          }
+        }
+      }
+     return nextKey;
+  }
+
+  key_type getPrevious(const key_type &key) const
+  {
+    key_type previousKey = key;
+    bool smallerKeyWasFound = false;
+    if(isEmpty())
+      throw std::invalid_argument("empty map has no elements");
+    for(int i = 0; i < NO_OF_BUCKETS; i++) {
+        if(!buckets[i].isEmpty()) {
+          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
+            if(!smallerKeyWasFound)
+            {
+              if((*bucketElement).first < key) {
+                previousKey = (*bucketElement).first;
+                smallerKeyWasFound = true;
+              }
+            }
+            else
+              if((*bucketElement).first < key && (*bucketElement).first > previousKey)
+                previousKey = (*bucketElement).first;
+          }
+        }
+      }
+     return previousKey;
+  }
+
+  int getHash(const key_type &key) const
+  {
+    //return (std::hash<key_type>(key)) % NO_OF_BUCKETS;// TODO use std::hash
+    return (key+30) % NO_OF_BUCKETS;
+  }
 };
 
 template <typename KeyType, typename ValueType>
@@ -485,10 +347,10 @@ public:
   ConstIterator& operator--()
   {
     if(currentKeyBucket == -1 && static_cast<int>(currentKey) != -1) // TODO other workaround than static cast, cause it does not solve the problem
-       throw std::out_of_range("cannot decrement begin, empty list");
-
-    if(currentKeyBucket == -1 && currentKeyBucket == -1) {
-      ConstIterator beginIt = iteratorsHashMap.cbegin();
+      throw std::out_of_range("cannot decrement begin, empty list");
+    if(currentKeyBucket == -1 && static_cast<int>(currentKey) == -1) {
+      key_type biggestKey = iteratorsHashMap.getBiggestKey();
+      ConstIterator beginIt(biggestKey, iteratorsHashMap.getHash(biggestKey), iteratorsHashMap);
       this->currentKeyBucket = beginIt.currentKeyBucket;
       this->currentKey = beginIt.currentKey;
       return *this;
@@ -586,6 +448,171 @@ public:
     // ugly cast, yet reduces code duplication.
     return const_cast<reference>(ConstIterator::operator*());
   }
+};
+
+template <typename KeyType, typename ValueType>
+class HashMap<KeyType, ValueType>::SinglyLinkedList
+{
+public:
+  class BucketIterator;
+
+  SinglyLinkedList() : head(new Node())
+  {
+    tail = head;
+  }
+
+  SinglyLinkedList(const SinglyLinkedList& other) : SinglyLinkedList()
+  {
+    auto it = other.begin();
+    while(it != other.end())
+    {
+      append((*it).first) = (*it).second;
+      ++it;
+    }
+  }
+
+  SinglyLinkedList& operator=(SinglyLinkedList other)
+  {
+   if(&other == this)
+      return *this;
+    swap(*this, other);
+      return *this;
+  }
+
+  ~SinglyLinkedList()
+  {
+    auto it = begin(), prevIt = begin();
+    while(it != end()) {
+      prevIt = it;
+      ++it;
+      delete prevIt.currentNode;
+    }
+    delete head;
+  }
+
+  mapped_type& append(const key_type &key)
+  {
+    DataNode *newNode = new DataNode(key);
+    tail->next = newNode;
+    tail = newNode;
+    return newNode->data.second;
+  }
+
+  void remove(const key_type &key)
+  {
+    bool wasFound = false;
+    auto iteratorBeforeRemElem = begin(), iteratorToRemElem = begin();
+    for( ; iteratorToRemElem != end(); ++iteratorToRemElem) {
+      if((*iteratorToRemElem).first == key) {
+        wasFound = true;
+        break;
+      }
+      iteratorBeforeRemElem = iteratorToRemElem;
+    }
+
+    if(!wasFound)
+      throw std::out_of_range("cannot remove, element does not exist");
+
+    if(iteratorToRemElem.currentNode == tail) {
+      tail = iteratorBeforeRemElem.currentNode;
+      tail->next = nullptr;
+    }
+    else
+      iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
+    if(head->next == iteratorToRemElem.currentNode) {
+      head->next = nullptr;
+      tail = head;
+    }
+
+    delete iteratorToRemElem.currentNode;
+  }
+
+  bool isEmpty() const
+  {
+    return head->next == nullptr;
+  }
+
+  value_type& getDataForKey(const key_type &key) const
+  {
+    for(auto it = begin(); it != end(); ++it)
+      if((*it).first == key)
+        return *it;
+    throw std::out_of_range("element with given key does not exist");
+  }
+
+  void swap(SinglyLinkedList& first, SinglyLinkedList& second)
+  {
+    using std::swap;
+    swap(first.head, second.head);
+    swap(first.tail, second.tail);
+  }
+
+  BucketIterator begin() const
+  {
+    return BucketIterator(head->next);
+  }
+
+  BucketIterator end() const
+  {
+    return BucketIterator(tail);
+  }
+
+  class Node
+  {
+  public:
+    Node *next;
+    Node() : next(nullptr) {};
+    virtual ~Node() {}
+  };
+
+  class DataNode : public Node
+  {
+  public:
+    value_type data;
+    DataNode(const key_type &key) : Node(), data({key, mapped_type{}}) {}
+  };
+
+  Node *head;
+  Node *tail;
+
+  class BucketIterator
+  {
+  public:
+    friend class SinglyLinkedList;
+
+    explicit BucketIterator(Node *startNode) : currentNode(startNode) {}
+
+    BucketIterator& operator++()
+    {
+      if(currentNode != nullptr)
+        currentNode = currentNode->next;
+      else
+        throw std::out_of_range("current node is nullptr");
+      return *this;
+    }
+
+    value_type& operator*() const
+    {
+      if(currentNode == nullptr)
+        throw std::invalid_argument("element does not exist");
+      if(DataNode *currentData = dynamic_cast<DataNode*>(currentNode))
+        return currentData->data;
+      throw std::invalid_argument("cannot dereference nondata node");
+    }
+
+    bool operator!=(const BucketIterator& other) const
+    {
+      return currentNode == other.currentNode;
+    }
+
+  private:
+    Node *currentNode;
+
+  };
+
+
+
+
 };
 
 }

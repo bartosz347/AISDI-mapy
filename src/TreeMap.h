@@ -25,66 +25,6 @@ public:
   using iterator = Iterator;
   using const_iterator = ConstIterator;
 
-private: // TODO move to lower private section
-  class BinaryNode {
-  public:
-    BinaryNode *left;
-    BinaryNode *right;
-    BinaryNode *parent;
-    value_type data;
-    BinaryNode() {}
-    BinaryNode(const key_type& key) : left(nullptr), right(nullptr), data(std::make_pair(key, mapped_type{})) {}
-
-  };
-  BinaryNode *head; // super head
-  size_type size;
-
-  void setup()
-  {
-    head = new BinaryNode();
-    head->left = head; // todo required to detect empty list
-    head->right = head; // used for detecting illegal --begin() with empty collection
-    head->parent = nullptr;
-    size = 0;
-  }
-
-  BinaryNode* getMinimalSubtreeNode(BinaryNode *node)
-  {
-    while(node->left != nullptr)
-      node = node->left;
-    return node;
-  }
-
-  void moveTree(BinaryNode *node1, BinaryNode *node2)
-  {
-    if(node1->parent == nullptr)
-      head->left = node2;
-    else if (node1 == node1->parent->left)
-      node1->parent->left = node2;
-    else
-      node1->parent->right = node2;
-    if(node2 != nullptr)
-      node2->parent = node1->parent;
-  }
-
-  void postOrderTraversalFreeingMemory(BinaryNode *node)
-  {
-    if(node->left != nullptr)
-      postOrderTraversalFreeingMemory(node->left);
-    if(node->right != nullptr)
-      postOrderTraversalFreeingMemory(node->right);
-    delete (node);
-  }
-
-  void swap(TreeMap& first, TreeMap& second)
-  {
-    using std::swap;
-    swap(first.head, second.head);
-    swap(first.size, second.size);
-  }
-
-
-public:
   TreeMap()
   {
     setup();
@@ -97,7 +37,7 @@ public:
       operator[](element.first) = element.second;
   }
 
-  TreeMap(const TreeMap& other) // todo can be done better?
+  TreeMap(const TreeMap& other)
   {
     setup();
     for(auto element : other)
@@ -111,20 +51,14 @@ public:
     swap(*this, other);
   }
 
-  TreeMap& operator=(TreeMap other) // previous: TreeMap& operator=(const TreeMap& other)
+  TreeMap& operator=(TreeMap other)
   {
     if(&other == this)
       return *this;
     swap(*this, other);
     return *this;
   }
-/*
-  TreeMap& operator=(TreeMap&& other) // not necessary -> copy swap idiom TODO
-  {
-    (void)other;
-    throw std::runtime_error("TODO");
-  }
-*/
+
   ~TreeMap()
   {
     if(!isEmpty())
@@ -206,7 +140,7 @@ public:
     return cend();
   }
 
-  iterator find(const key_type& key) // todo combine with const_iterator find
+  iterator find(const key_type& key) // todo combine with const_iterator find ?
   {
     if(size == 0)
       return end();
@@ -321,6 +255,64 @@ public:
   const_iterator end() const
   {
     return cend();
+  }
+
+private:
+  class BinaryNode {
+  public:
+    BinaryNode *left;
+    BinaryNode *right;
+    BinaryNode *parent;
+    value_type data;
+    BinaryNode() {}
+    BinaryNode(const key_type& key) : left(nullptr), right(nullptr), data(std::make_pair(key, mapped_type{})) {}
+
+  };
+  BinaryNode *head; // super head
+  size_type size;
+
+  void setup()
+  {
+    head = new BinaryNode();
+    head->left = head; // todo required to detect empty list
+    head->right = head; // used for detecting illegal --begin() with empty collection
+    head->parent = nullptr;
+    size = 0;
+  }
+
+  BinaryNode* getMinimalSubtreeNode(BinaryNode *node)
+  {
+    while(node->left != nullptr)
+      node = node->left;
+    return node;
+  }
+
+  void moveTree(BinaryNode *node1, BinaryNode *node2)
+  {
+    if(node1->parent == nullptr)
+      head->left = node2;
+    else if (node1 == node1->parent->left)
+      node1->parent->left = node2;
+    else
+      node1->parent->right = node2;
+    if(node2 != nullptr)
+      node2->parent = node1->parent;
+  }
+
+  void postOrderTraversalFreeingMemory(BinaryNode *node)
+  {
+    if(node->left != nullptr)
+      postOrderTraversalFreeingMemory(node->left);
+    if(node->right != nullptr)
+      postOrderTraversalFreeingMemory(node->right);
+    delete (node);
+  }
+
+  void swap(TreeMap& first, TreeMap& second)
+  {
+    using std::swap;
+    swap(first.head, second.head);
+    swap(first.size, second.size);
   }
 };
 
