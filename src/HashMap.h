@@ -75,12 +75,20 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
+    /*
+     ASK - is code with try&catch slower?
+
     try {
       return buckets[getHash(key)].getDataForKey(key).second;
     } catch(std::out_of_range e) {
       size++;
       return buckets[getHash(key)].append(key);
-    }
+    }*/
+
+    if(buckets[getHash(key)].isKeyPresent(key))
+      return buckets[getHash(key)].getDataForKey(key).second;
+    size++;
+    return buckets[getHash(key)].append(key);
   }
 
   const mapped_type& valueOf(const key_type& key) const
@@ -103,26 +111,14 @@ public:
   {
     if(isEmpty())
       return cend();
-    auto it = ConstIterator(key, *this);
-    try {
-      *it;
-    } catch(std::out_of_range e) {
-      return cend();
-    }
-    return it;
+    return search(key);
   }
 
   iterator find(const key_type& key)
   {
     if(isEmpty())
       return end();
-    auto it = ConstIterator(key, *this);
-    try {
-      *it;
-    } catch(std::out_of_range e) {
-      return end();
-    }
-    return it;
+    return search(key);
   }
 
   void remove(const key_type& key)
@@ -155,10 +151,10 @@ public:
 
     for(size_type i = 0; i < size; i++)
     {
-        if(!(otherIt->first == ownIt->first && otherIt->second == ownIt->second))
-            return false;
-        otherIt++;
-        ownIt++;
+      if(!(otherIt->first == ownIt->first && otherIt->second == ownIt->second))
+        return false;
+      otherIt++;
+      ownIt++;
     }
     return true;
   }
@@ -297,6 +293,17 @@ private:
      return previousKey;
   }
 
+  const_iterator search(const key_type& key) const
+  {
+    auto it = ConstIterator(key, *this);
+    try {
+      *it;
+    } catch(std::out_of_range e) {
+      return cend();
+    }
+    return it;
+  }
+
   int getHash(const key_type &key) const
   {
     //return (std::hash<key_type>(key)) % NO_OF_BUCKETS;// TODO use std::hash
@@ -389,7 +396,7 @@ public:
 
   bool operator==(const ConstIterator& other) const
   {
-    if(currentKeyBucket == -1 && currentKeyBucket == other.currentKeyBucket) // todo iterators for empty list
+    if(currentKeyBucket == -1 && currentKeyBucket == other.currentKeyBucket) // empty list
       return true;
 
     return currentKey == other.currentKey;
@@ -520,12 +527,12 @@ public:
       tail = iteratorBeforeRemElem.currentNode;
       tail->next = nullptr;
     }
-    else
-      iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
     if(head->next == iteratorToRemElem.currentNode) {
-      head->next = nullptr;
-      tail = head;
-    }
+      head->next = iteratorToRemElem.currentNode->next;
+      if(head->next == nullptr)
+        tail = head;
+    } else
+      iteratorBeforeRemElem.currentNode->next = iteratorToRemElem.currentNode->next;
 
     delete iteratorToRemElem.currentNode;
   }
@@ -543,6 +550,16 @@ public:
     throw std::out_of_range("element with given key does not exist");
   }
 
+  bool isKeyPresent(const key_type &key) const
+  {
+    if(isEmpty())
+      return false;
+    for(auto it = begin(); it != end(); ++it)
+      if((*it).first == key)
+        return true;
+    return false;
+  }
+
   void swap(SinglyLinkedList& first, SinglyLinkedList& second)
   {
     using std::swap;
@@ -557,7 +574,7 @@ public:
 
   BucketIterator end() const
   {
-    return BucketIterator(tail);
+    return BucketIterator(nullptr);
   }
 
   class Node
@@ -590,7 +607,7 @@ public:
       if(currentNode != nullptr)
         currentNode = currentNode->next;
       else
-        throw std::out_of_range("current node is nullptr");
+        currentNode = nullptr;
       return *this;
     }
 
@@ -605,7 +622,7 @@ public:
 
     bool operator!=(const BucketIterator& other) const
     {
-      return currentNode == other.currentNode;
+      return currentNode != other.currentNode;
     }
 
   private:

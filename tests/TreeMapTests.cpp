@@ -499,18 +499,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueByKey_ThenItemIs
   thenMapContainsItems(map, { { 42, "Alice" } });
 }
 
-// MY TEST
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueThatHasChildByKey_ThenItemIsRemoved,
-                              K,
-                              TestedKeyTypes)
-{
-  Map<K> map = { { 42, "Alice" }, { 27, "Bob" } };
-
-  map.remove(42);
-
-  thenMapContainsItems(map, { { 27, "Bob" } });
-}
-
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapBecomesEmpty,
                               K,
                               TestedKeyTypes)
@@ -520,58 +508,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenMapB
   map.remove(27);
 
   BOOST_CHECK(map.isEmpty());
-}
-
-// MY TEST TODO modify
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKeyAndAddingNew_ThenNewArePresent,
-                              K,
-                              TestedKeyTypes)
-{
-  Map<K> map = { { 27, "Bob" } };
-
-  map.remove(27);
-  BOOST_CHECK(begin(map) == end(map));
-
-  map[34] = "abc";
-  map[48] = "xkcd";
-  auto it = map.begin();
-  it++;
-
-  thenMapContainsItems(map, { { 34, "abc" }, { 48, "xkcd" } });
-  BOOST_CHECK_EQUAL(it->first, 48);
-}
-
-// MY TEST
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenThreeItemMap_WhenDereferencingDecrementedEndIterator_TheBiggesKeyIsReturned,
-                              K,
-                              TestedKeyTypes)
-{
-  Map<K> map = { { 27, "Bob" } };
-
-  map[34] = "abc";
-  map[48] = "xkcd";
-  auto it = map.end();
-  it--;
-
-  BOOST_CHECK_EQUAL(it->first, 48);
-}
-
-// MY TEST
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenDecrementingBeginThrowsException,
-                              K,
-                              TestedKeyTypes)
-{
-  Map<K> map = { { 27, "Bob" } };
-
-  map.remove(27);
-  BOOST_CHECK(begin(map) == end(map));
-
-
-  BOOST_CHECK_THROW(map.begin()--, std::out_of_range);
-  BOOST_CHECK_THROW(--(map.begin()), std::out_of_range);
-  BOOST_CHECK_THROW(map.cbegin()--, std::out_of_range);
-  BOOST_CHECK_THROW(--(map.cbegin()), std::out_of_range);
-
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenErasingEnd_ThenExceptionIsThrown,
@@ -653,6 +589,70 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenTwoMapsWithDifferentKeys_WhenComparingThem_Th
   const Map<K> other = { { 27, "Alice" }, { 42, "Bob" } };
 
   BOOST_CHECK(map != other);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenRemovingValueThatHasChildByKey_ThenItemIsRemoved,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 42, "Alice" }, { 27, "Bob" } };
+
+  map.remove(42);
+
+  thenMapContainsItems(map, { { 27, "Bob" } });
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKeyAndAddingNew_ThenNewArePresent,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.begin();
+  it++;
+
+  thenMapContainsItems(map, { { 34, "abc" }, { 48, "xkcd" } });
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenThreeItemMap_WhenDereferencingDecrementedEndIterator_TheBiggesKeyIsReturned,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map[34] = "abc";
+  map[48] = "xkcd";
+  auto it = map.end();
+  it--;
+
+  BOOST_CHECK_EQUAL(it->first, 48);
+}
+
+// MY TEST
+BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenDecrementingBeginThrowsException,
+                              K,
+                              TestedKeyTypes)
+{
+  Map<K> map = { { 27, "Bob" } };
+
+  map.remove(27);
+  BOOST_CHECK(begin(map) == end(map));
+
+
+  BOOST_CHECK_THROW(map.begin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.begin()), std::out_of_range);
+  BOOST_CHECK_THROW(map.cbegin()--, std::out_of_range);
+  BOOST_CHECK_THROW(--(map.cbegin()), std::out_of_range);
+
 }
 
 // ConstIterator is tested via Iterator methods.

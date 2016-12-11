@@ -73,20 +73,18 @@ public:
 
   mapped_type& operator[](const key_type& key)
   {
-    BinaryNode *newNode = new BinaryNode(key);
     if(isEmpty()) {
+        BinaryNode *newNode = new BinaryNode(key);
         newNode->parent = head;
         head->left = newNode; // list no longer empty
         head->right = nullptr; // important for check against decrementing begin() in empty map
         size++;
         return newNode->data.second;
     }
-    BinaryNode *next = head->left;
-    BinaryNode *current;
+    BinaryNode *next = head->left, *current = nullptr;
     while(next != nullptr) {
         current = next;
         if(key == current->data.first) { //node with this key already exists
-            delete newNode;
             return current->data.second;
         }
         if(key < current->data.first)
@@ -94,6 +92,8 @@ public:
         else
             next = current->right;
     }
+
+    BinaryNode *newNode = new BinaryNode(key);
     newNode->parent = current;
     if(key < current->data.first)
       current->left = newNode;
@@ -127,34 +127,14 @@ public:
   {
     if(isEmpty())
       return cend();
-
-    BinaryNode *current = head->left;
-    while(current != nullptr) {
-        if(key == current->data.first)
-            return const_iterator(current);
-        if(key < current->data.first)
-            current = current->left;
-        else
-            current = current->right;
-    }
-    return cend();
+    return search(head->left, key);
   }
 
-  iterator find(const key_type& key) // todo combine with const_iterator find ?
+  iterator find(const key_type& key)
   {
     if(size == 0)
       return end();
-
-    BinaryNode *current = head->left;
-    while(current != nullptr) {
-        if(key == current->data.first)
-            return const_iterator(current);
-        if(key < current->data.first)
-            current = current->left;
-        else
-            current = current->right;
-    }
-    return end();
+    return search(head->left, key);
   }
 
   void remove(const key_type& key)
@@ -201,7 +181,7 @@ public:
     return size;
   }
 
-  bool operator==(const TreeMap& other) const // todo is there a better way?
+  bool operator==(const TreeMap& other) const
   {
     if(size != other.size)
       return false;
@@ -274,10 +254,23 @@ private:
   void setup()
   {
     head = new BinaryNode();
-    head->left = head; // todo required to detect empty list
+    head->left = head; // required to detect empty list
     head->right = head; // used for detecting illegal --begin() with empty collection
     head->parent = nullptr;
     size = 0;
+  }
+
+  const_iterator search(BinaryNode *startNode, const key_type& key) const
+  {
+    while(startNode != nullptr) {
+        if(key == startNode->data.first)
+            return const_iterator(startNode);
+        if(key < startNode->data.first)
+            startNode = startNode->left;
+        else
+            startNode = startNode->right;
+    }
+    return cend();
   }
 
   BinaryNode* getMinimalSubtreeNode(BinaryNode *node)
@@ -375,7 +368,7 @@ public:
     BinaryNode *tmp = currentNode->parent;
     while(tmp != nullptr && currentNode == tmp->left) {
       if(tmp->parent == nullptr)
-        throw std::out_of_range("Cannot decrement begin"); //todo
+        throw std::out_of_range("Cannot decrement begin");
       currentNode = tmp;
       tmp = tmp->parent;
     }
