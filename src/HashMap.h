@@ -306,8 +306,7 @@ private:
 
   int getHash(const key_type &key) const
   {
-    //return (std::hash<key_type>(key)) % NO_OF_BUCKETS;// TODO use std::hash
-    return (key+30) % NO_OF_BUCKETS;
+    return std::hash<key_type>{}(key) % NO_OF_BUCKETS;
   }
 };
 
