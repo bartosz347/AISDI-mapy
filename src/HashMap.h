@@ -87,6 +87,8 @@ public:
 
     if(buckets[getHash(key)].isKeyPresent(key))
       return buckets[getHash(key)].getDataForKey(key).second;
+    if(isEmpty() || key < smallestKey)
+      smallestKey = key;
     size++;
     return buckets[getHash(key)].append(key);
   }
@@ -128,6 +130,8 @@ public:
 
     buckets[getHash(key)].remove(key);
     size--;
+    if(smallestKey == key && !isEmpty())
+      smallestKey = getSmallestKey();
   }
 
   void remove(const const_iterator& it)
@@ -179,7 +183,7 @@ public:
     if(isEmpty())
       return ConstIterator(0, -1, *this);
     else {
-      key_type key = getSmallestKey();
+      key_type key = smallestKey;
       return ConstIterator(key, *this);
     }
   }
@@ -203,6 +207,7 @@ private:
   static const int NO_OF_BUCKETS = 16000;
   std::array<SinglyLinkedList, NO_OF_BUCKETS> buckets;
   size_type size;
+  key_type smallestKey;
 
 
   key_type getSmallestKey() const
