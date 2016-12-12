@@ -21,7 +21,6 @@ using Map = aisdi::HashMap<K, V>;
 
 void perfomTest(int noElements, int whichOperations)
 {
-  (void)whichOperations;
   std::vector < std::pair <int, long int> > tab(noElements);
 
   // Array with noElements, element is a pair key-value
