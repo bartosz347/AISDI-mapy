@@ -667,22 +667,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(GivenSingleItemMap_WhenRemovingValueByKey_ThenDecr
 
 }
 
-// MY TEST
-BOOST_AUTO_TEST_CASE_TEMPLATE(GivenNotEmptyMap_WhenGettingNextElement_ThenItemsAreInAscendingOrder,
-                              K,
-                              TestedKeyTypes)
-{
-  Map<K> map = { { 42, "Alice" }, { 27, "Bob" }, { 1, "Andrew" }, };
-
-  auto it = map.begin();
-  BOOST_CHECK_EQUAL(it->first, 1);
-  it++;
-  BOOST_CHECK_EQUAL(it->first, 27);
-  it++;
-  BOOST_CHECK_EQUAL(it->first, 42);
-  it++;
-  BOOST_CHECK(it == map.end());
-}
 
 // ConstIterator is tested via Iterator methods.
 // If Iterator methods are to be changed, then new ConstIterator tests are required.

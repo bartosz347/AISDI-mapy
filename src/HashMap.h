@@ -150,16 +150,13 @@ public:
   {
     if(size != other.size)
       return false;
-    auto otherIt = other.cbegin();
-    auto ownIt = cbegin();
 
-    for(size_type i = 0; i < size; i++)
-    {
-      if(!(otherIt->first == ownIt->first && otherIt->second == ownIt->second))
+    for(auto element : other) {
+      auto foundEl = find(element.first);
+      if(foundEl == cend() || foundEl->second != element.second)
         return false;
-      otherIt++;
-      ownIt++;
     }
+
     return true;
   }
 
@@ -250,52 +247,29 @@ private:
 
   key_type getNext(const key_type &key) const
   {
-    key_type nextKey = key;
-    bool greaterKeyWasFound = false;
     if(isEmpty())
       throw std::invalid_argument("empty map has no elements");
-      for(int i = 0; i < NO_OF_BUCKETS; i++) {
-        if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
-            if(!greaterKeyWasFound)
-            {
-              if((*bucketElement).first > key) {
-                nextKey = (*bucketElement).first;
-                greaterKeyWasFound = true;
-              }
-            }
-            else
-              if((*bucketElement).first > key && (*bucketElement).first < nextKey)
-                nextKey = (*bucketElement).first;
-          }
-        }
-      }
-     return nextKey;
+
+    for(int i = getHash(key)+1; i < NO_OF_BUCKETS; i++) {
+    (void)i;
+      if(!buckets[i].isEmpty())
+        return (*buckets[i].begin()).first;
+
+    }
+    return key;
   }
 
   key_type getPrevious(const key_type &key) const
   {
-    key_type previousKey = key;
-    bool smallerKeyWasFound = false;
-    if(isEmpty())
+   if(isEmpty())
       throw std::invalid_argument("empty map has no elements");
-    for(int i = 0; i < NO_OF_BUCKETS; i++) {
-        if(!buckets[i].isEmpty()) {
-          for(auto bucketElement = buckets[i].begin(); bucketElement != buckets[i].end(); ++bucketElement) {
-            if(!smallerKeyWasFound)
-            {
-              if((*bucketElement).first < key) {
-                previousKey = (*bucketElement).first;
-                smallerKeyWasFound = true;
-              }
-            }
-            else
-              if((*bucketElement).first < key && (*bucketElement).first > previousKey)
-                previousKey = (*bucketElement).first;
-          }
-        }
-      }
-     return previousKey;
+
+    for(int i = getHash(key)-1; i > 0; i--) {
+      if(!buckets[i].isEmpty())
+        return (*buckets[i].getLastElementIterator()).first;
+
+    }
+    return key;
   }
 
   const_iterator search(const key_type& key) const
@@ -342,9 +316,16 @@ public:
   {
     if(currentKeyBucket == -1)
        throw std::out_of_range("cannot increment end");
+
+    auto it = iteratorsHashMap.buckets[currentKeyBucket].getIteratorForKey(currentKey);
+    if(++it != iteratorsHashMap.buckets[currentKeyBucket].end()) {
+      currentKey = (*it).first;
+      currentKeyBucket = iteratorsHashMap.getHash(currentKey);
+      return *this;
+    }
     key_type previousKey = currentKey;
     currentKey = iteratorsHashMap.getNext(currentKey);
-    if(currentKey == previousKey){ // no greater key found, so current element is the last one
+    if(currentKey == previousKey) { // no greater key found, so current element is the last one
       currentKey = -1;
       currentKeyBucket = -1;
     } else
@@ -367,6 +348,14 @@ public:
       key_type biggestKey = iteratorsHashMap.getBiggestKey();
       this->currentKeyBucket = iteratorsHashMap.getHash(biggestKey);
       this->currentKey = biggestKey;
+      return *this;
+    }
+
+    auto it = iteratorsHashMap.buckets[currentKeyBucket].getIteratorForKey(currentKey);
+    if(it != iteratorsHashMap.buckets[currentKeyBucket].begin()) {
+      it = iteratorsHashMap.buckets[currentKeyBucket].getIteratorBefore(it);
+      currentKey = (*it).first;
+      currentKeyBucket = iteratorsHashMap.getHash(currentKey);
       return *this;
     }
 
@@ -571,6 +560,35 @@ public:
     swap(first.tail, second.tail);
   }
 
+  BucketIterator getIteratorForKey(const key_type &key) const
+  {
+    for(auto it = begin(); it != end(); ++it)
+      if((*it).first == key)
+        return it;
+    throw std::out_of_range("element with given key does not exist");
+  }
+
+  BucketIterator getIteratorBefore(BucketIterator &givenIt) const
+  {
+    auto prevIt = begin();
+    for(auto it = begin(); it != end(); ++it)
+    {
+      prevIt = it;
+      if(it == givenIt)
+        return prevIt;
+    }
+    return prevIt;
+  }
+
+  BucketIterator getLastElementIterator() const
+  {
+    auto prevIt = begin();
+    for(auto it = begin(); it != end(); ++it)
+      prevIt = it;
+
+    return prevIt;
+  }
+
   BucketIterator begin() const
   {
     return BucketIterator(head->next);
@@ -627,6 +645,12 @@ public:
     bool operator!=(const BucketIterator& other) const
     {
       return currentNode != other.currentNode;
+    }
+
+
+    bool operator==(const BucketIterator& other) const
+    {
+      return currentNode == other.currentNode;
     }
 
   private:
